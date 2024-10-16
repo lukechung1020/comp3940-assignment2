@@ -2,7 +2,7 @@
 
 ## Setup
 
-### Starting the UploadServer server
+### Starting UploadServer
 - Open a terminal at the `/UploadServer` directory
 - Compile all '.java' files using `javac *.java`
 - Run `java UploadServer` in the terminal to start the server
