@@ -11,7 +11,7 @@ public class UploadClient {
         String boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
         String host = "localhost"; // Change this to your target host
         String endpoint = "/upload/upload";
-        int port = 8081; // Default HTTP port
+        int port = 8082; // UploadServer port
 
         // Prepare the request body
         ByteArrayOutputStream requestBodyStream = new ByteArrayOutputStream();
