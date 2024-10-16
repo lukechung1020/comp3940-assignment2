@@ -1,10 +1,9 @@
 import java.io.*;
-import java.time.Clock;
 
 public class UploadServlet extends HttpServlet {
 
    protected void doGet(HttpServletRequest request, HttpServletResponse response) {
-      PrintWriter out = new PrintWriter(response.getOutputStream(), true);
+      response.setContentType("text/html");
       String htmlResponse = "<!DOCTYPE html>"
               + "<html>"
               + "<body>"
@@ -17,37 +16,83 @@ public class UploadServlet extends HttpServlet {
               + "</form>"
               + "</body>"
               + "</html>";
-
-      out.println("HTTP/1.1 200 OK");
-      out.println("Content-Type: text/html");
-      out.println("Content-Length: " + htmlResponse.length());
-      out.println();
-      out.println(htmlResponse);
+      response.writeResponse(htmlResponse);
    }
 
    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
+      System.out.println("INSIDE DOPOST METHOD"); // logging
       try {
-         InputStream in = request.getInputStream();   
-         ByteArrayOutputStream baos = new ByteArrayOutputStream();  
-         byte[] content = new byte[1];
-         int bytesRead = -1;      
-         while( ( bytesRead = in.read( content ) ) != -1 ) {  
-            baos.write( content, 0, bytesRead );  
+         String body = request.getBody();
+         System.out.println("Body received: " + body); // logging
+
+         String boundary = "--" + request.getHeader("Content-Type").split("=")[1];
+         String[] parts = body.split(boundary);
+
+         // form data parts
+         String caption = null;
+         String date = null;
+         String fileName = null;
+         byte[] fileContent = null;
+
+         for (String part : parts) {
+            part = part.trim();
+            if (part.isEmpty() || part.equals("--")) continue;
+
+            String[] headersAndBody = part.split("\r\n\r\n", 2);
+            if (headersAndBody.length < 2) continue;
+
+            String headersPart = headersAndBody[0];
+            String contentPart = headersAndBody[1].trim(); // body
+
+            System.out.println("Headers: " + headersPart); // logging
+
+            String[] headers = headersPart.split("\r\n");
+            for (String header : headers) {
+               if (header.startsWith("Content-Disposition")) {
+                  System.out.println("Header: " + header); // logging
+
+                  // filter out fields
+                  String[] dispositionParts = header.split("; ");
+                  for (String dispositionPart : dispositionParts) {
+                     if (dispositionPart.startsWith("name=")) {
+                        String fieldName = dispositionPart.split("=")[1].replace("\"", "");
+                        System.out.println("Field Name: " + fieldName); // logging
+                        if (fieldName.equals("caption")) {
+                           caption = contentPart;
+                        } else if (fieldName.equals("date")) {
+                           date = contentPart;
+                        }
+                     } else if (dispositionPart.startsWith("filename=")) {
+                        fileName = dispositionPart.split("=")[1].replace("\"", "");
+                        System.out.println("File Name: " + fileName); // logging
+                     }
+                  }
+               }
+            }
+            if (fileName != null) {
+               fileContent = contentPart.getBytes();
+            }
          }
-         Clock clock = Clock.systemDefaultZone();
-         long milliSeconds=clock.millis();
-         OutputStream outputStream = new FileOutputStream(new File(String.valueOf(milliSeconds) + ".png"));
-         baos.writeTo(outputStream);
-         outputStream.close();
-         PrintWriter out = new PrintWriter(response.getOutputStream(), true);
-         File dir = new File(".");
-         String[] chld = dir.list();
-      	 for(int i = 0; i < chld.length; i++){
-            String fileName = chld[i];
-            out.println(fileName+"\n");
-            System.out.println(fileName);
+
+         // create directory "files" if it doesn't exist
+         File directory = new File("files");
+         if (!directory.exists()) {
+            directory.mkdir();
          }
-      } catch(Exception ex) {
+
+         // make the new filename with caption and date -- append to front cause too lazy to separate file extension
+         String newFileName = caption + "_" + date + "_" + fileName;
+         File fileToSave = new File(directory, newFileName);
+
+         try (FileOutputStream fos = new FileOutputStream(fileToSave)) {
+            fos.write(fileContent);
+         }
+
+
+         response.setContentType("text/plain");
+         response.writeResponse("Upload successful! File saved as: " + newFileName);
+
+      } catch (Exception ex) {
          System.err.println(ex);
       }
    }
