@@ -1,4 +1,7 @@
 import java.io.*;
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.List;
 
 public class UploadServlet extends HttpServlet {
 
@@ -74,23 +77,48 @@ public class UploadServlet extends HttpServlet {
             }
          }
 
-         // create directory "files" if it doesn't exist
+         // Create directory "files" if it doesn't exist
          File directory = new File("files");
          if (!directory.exists()) {
             directory.mkdir();
          }
 
-         // make the new filename with caption and date -- append to front cause too lazy to separate file extension
+         // Make the new filename with caption and date
          String newFileName = caption + "_" + date + "_" + fileName;
          File fileToSave = new File(directory, newFileName);
 
+         // Save the file
          try (FileOutputStream fos = new FileOutputStream(fileToSave)) {
             fos.write(fileContent);
          }
 
+         // Now generate a sorted listing of the images folder
+         List<String> fileNames = new ArrayList<>();
+         for (File file : directory.listFiles()) {
+            if (file.isFile()) {
+               fileNames.add(file.getName());
+            }
+         }
 
-         response.setContentType("text/plain");
-         response.writeResponse("Upload successful! File saved as: " + newFileName);
+         // Sort the file names alphabetically
+         Collections.sort(fileNames);
+
+         // Generate HTML response
+         StringBuilder htmlResponse = new StringBuilder();
+         htmlResponse.append("<!DOCTYPE html>")
+                 .append("<html>")
+                 .append("<body>")
+                 .append("<h2>Uploaded Files</h2>")
+                 .append("<ul>");
+         for (String name : fileNames) {
+            htmlResponse.append("<li>").append(name).append("</li>");
+         }
+         htmlResponse.append("</ul>")
+                 .append("</body>")
+                 .append("</html>");
+
+         response.setContentType("text/html");
+         response.writeResponse(htmlResponse.toString());
 
       } catch (Exception ex) {
          System.err.println(ex);
