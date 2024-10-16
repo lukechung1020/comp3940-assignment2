@@ -24,11 +24,11 @@ public class UploadServlet extends HttpServlet {
    }
 
    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
-      System.out.println("INSIDE DOPOST METHOD"); // logging
-      System.out.println("UploadServlet: doPost method invoked"); // logging
+      System.out.println("INSIDE DOPOST METHOD"); // log
+      System.out.println("UploadServlet: doPost method invoked"); // log
       try {
          String body = request.getBody();
-         System.out.println("UploadServlet Body received: " + body); // logging
+         System.out.println("UploadServlet Body received: " + body); // log
 
          String boundary = "--" + request.getHeader("Content-Type").split("=")[1];
          String[] parts = body.split(boundary);
@@ -49,19 +49,19 @@ public class UploadServlet extends HttpServlet {
             String headersPart = headersAndBody[0];
             String contentPart = headersAndBody[1].trim(); // body
 
-            System.out.println("UploadServlet Headers: " + headersPart); // logging
+            System.out.println("UploadServlet Headers: " + headersPart); // log
 
             String[] headers = headersPart.split("\r\n");
             for (String header : headers) {
                if (header.startsWith("Content-Disposition")) {
-                  System.out.println("UploadServlet Header: " + header); // logging
+                  System.out.println("UploadServlet Header: " + header); // log
 
                   // filter out fields
                   String[] dispositionParts = header.split("; ");
                   for (String dispositionPart : dispositionParts) {
                      if (dispositionPart.startsWith("name=")) {
                         String fieldName = dispositionPart.split("=")[1].replace("\"", "");
-                        System.out.println("UploadServlet Field Name: " + fieldName); // logging
+                        System.out.println("UploadServlet Field Name: " + fieldName); // log
                         if (fieldName.equals("caption")) {
                            caption = contentPart;
                         } else if (fieldName.equals("date")) {
@@ -69,7 +69,7 @@ public class UploadServlet extends HttpServlet {
                         }
                      } else if (dispositionPart.startsWith("filename=")) {
                         fileName = dispositionPart.split("=")[1].replace("\"", "");
-                        System.out.println("UploadServlet File Name: " + fileName); // logging
+                        System.out.println("UploadServlet File Name: " + fileName); // log
                      }
                   }
                }
@@ -79,35 +79,33 @@ public class UploadServlet extends HttpServlet {
             }
          }
 
-         // Create directory "files" if it doesn't exist
+         // only create "files" directory if it doesn't exist
          File directory = new File("files");
          if (!directory.exists()) {
             directory.mkdir();
-            System.out.println("UploadServlet: Created 'files' directory"); // logging
+            System.out.println("UploadServlet: Created 'files' directory"); // log
          }
 
-         // Make the new filename with caption and date
+         // new and improved filename format
          String newFileName = caption + "_" + date + "_" + fileName;
          File fileToSave = new File(directory, newFileName);
 
-         // Save the file
+         // save file
          try (FileOutputStream fos = new FileOutputStream(fileToSave)) {
             fos.write(fileContent);
             System.out.println("UploadServlet: File saved as " + newFileName);
          }
 
-         // Now generate a sorted listing of the images folder
+         // generate sorted listing of the images folder
          List<String> fileNames = new ArrayList<>();
          for (File file : directory.listFiles()) {
             if (file.isFile()) {
                fileNames.add(file.getName());
             }
          }
-
-         // Sort the file names alphabetically
          Collections.sort(fileNames);
 
-         // Generate HTML response
+         // HTML response
          StringBuilder htmlResponse = new StringBuilder();
          htmlResponse.append("<!DOCTYPE html>")
                  .append("<html>")

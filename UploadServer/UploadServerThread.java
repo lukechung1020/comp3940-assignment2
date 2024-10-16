@@ -19,11 +19,10 @@ public class UploadServerThread extends Thread {
          String request = in.readLine();
          System.out.println("UploadServerThread: Request received: " + request); // log to check request received
 
-         // Extract the URL path from the request (e.g., POST /fileuploadservlet HTTP/1.1)
          String[] requestParts = request.split(" ");
-         String method = requestParts[0]; // GET or POST
-         String path = requestParts[1]; // URL path
-         System.out.println("UploadServerThread: Method: " + method + ", Path: " + path); // Debug statement
+         String method = requestParts[0];
+         String path = requestParts[1];
+         System.out.println("UploadServerThread: Method: " + method + ", Path: " + path); // debug
 
 
          Map<String, String> headers = new HashMap<>();
@@ -54,16 +53,15 @@ public class UploadServerThread extends Thread {
          ByteArrayOutputStream baos = new ByteArrayOutputStream();
          HttpServletResponse res = new HttpServletResponse(baos);
 
-         // Choose the servlet based on the requested path
+         // servlet paths
          String servletName;
          if (path.equals("/fileuploadservlet")) {
             servletName = "FileUploadServlet";
          } else {
-            // Fallback to another servlet or handle 404
-            servletName = "UploadServlet"; // Assuming you have a default servlet
+            servletName = "UploadServlet"; // default
          }
 
-         // Load and invoke the chosen servlet using reflection
+         // load and invoke servlet using reflection
          Class<?> servletClass = Class.forName(servletName);
          Constructor<?> constructor = servletClass.getConstructor();
          HttpServlet httpServlet = (HttpServlet) constructor.newInstance();

@@ -77,35 +77,33 @@ public class FileUploadServlet extends HttpServlet {
                 }
             }
 
-            // Create directory "files" if it doesn't exist
+            // only create "files" directory if it doesn't exist
             File directory = new File("files");
             if (!directory.exists()) {
                 directory.mkdir();
                 System.out.println("FileUploadServlet: Created 'files' directory"); // logging
             }
 
-            // Make the new filename with caption and date
+            // new and improved filename format
             String newFileName = caption + "_" + date + "_" + fileName;
             File fileToSave = new File(directory, newFileName);
 
-            // Save the file
+            // save file
             try (FileOutputStream fos = new FileOutputStream(fileToSave)) {
                 fos.write(fileContent);
                 System.out.println("FileUploadServlet: File saved as " + newFileName);
             }
 
-            // Now generate a sorted listing of the files folder
+            // generate sorted listing of the files folder
             List<String> fileNames = new ArrayList<>();
             for (File file : directory.listFiles()) {
                 if (file.isFile()) {
                     fileNames.add(file.getName());
                 }
             }
-
-            // Sort the file names alphabetically
             Collections.sort(fileNames);
 
-            // Generate HTML response
+            // HTML response
             StringBuilder htmlResponse = new StringBuilder();
             htmlResponse.append("<!DOCTYPE html>")
                     .append("<html>")
