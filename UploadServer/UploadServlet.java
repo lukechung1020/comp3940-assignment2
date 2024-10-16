@@ -1,6 +1,30 @@
 import java.io.*;
 import java.time.Clock;
+
 public class UploadServlet extends HttpServlet {
+
+   protected void doGet(HttpServletRequest request, HttpServletResponse response) {
+      PrintWriter out = new PrintWriter(response.getOutputStream(), true);
+      String htmlResponse = "<!DOCTYPE html>"
+              + "<html>"
+              + "<body>"
+              + "<h2>HTML Forms</h2>"
+              + "<form method='post' enctype='multipart/form-data'>"
+              + "Caption: <input type='text' name='caption'/><br/><br/>"
+              + "Date: <input type='date' name='date' /><br/>"
+              + "<input type='file' name='fileName'/><br/><br/>"
+              + "<input type='submit' value='Submit' />"
+              + "</form>"
+              + "</body>"
+              + "</html>";
+
+      out.println("HTTP/1.1 200 OK");
+      out.println("Content-Type: text/html");
+      out.println("Content-Length: " + htmlResponse.length());
+      out.println();
+      out.println(htmlResponse);
+   }
+
    protected void doPost(HttpServletRequest request, HttpServletResponse response) {
       try {
          InputStream in = request.getInputStream();   
